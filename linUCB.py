@@ -41,8 +41,8 @@ class LinUCB:
 		self.theta[self.a_max] = np.dot(self.AaI[self.a_max],self.ba[self.a_max])
 
 
-	def recommend(self,timestep,user_features,actions):
-		xaT = np.array([user_features])
+	def recommend(self,timestep,context_features,actions):
+		xaT = np.array([context_features])
 		xa = np.transport(xaT)
 
 		AaI_tmp = np.array([self.AaI[action]] for action in actions)
