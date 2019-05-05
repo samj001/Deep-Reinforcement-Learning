@@ -1,5 +1,4 @@
 
-
 import os,sys,json,math,operator
 import sqlite3
 import tensorflow as tf
@@ -13,25 +12,25 @@ from elasticsearch import Elasticsearch
 __es__ = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
 def getTopics():
-    sqlite_file = ".\\trec-dd-jig\\jig\\truth.db" #address of the topic database
-    topic_table = "topic"
-    conn = sqlite3.connect(sqlite_file)
-    c = conn.cursor()
-    #c.execute('SELECT * FROM {tt}'.format(tt = topic_table))
-    #all_rows = c.fetchall()
-    c.execute('SELECT topic_name FROM {tt}'.format(tt = topic_table))
-    all_topics = c.fetchall()
-    print(all_topics)
-    conn.commit()
-    conn.close()
+	sqlite_file = ".\\trec-dd-jig\\jig\\truth.db" #address of the topic database
+	topic_table = "topic"
+	conn = sqlite3.connect(sqlite_file)
+	c = conn.cursor()
+	#c.execute('SELECT * FROM {tt}'.format(tt = topic_table))
+	#all_rows = c.fetchall()
+	c.execute('SELECT topic_name FROM {tt}'.format(tt = topic_table))
+	all_topics = c.fetchall()
+	print(all_topics)
+	conn.commit()
+	conn.close()
 
-    topic_tuples = []
-    for topic in all_topics:
-    	length = len(topic.split())
-    	weight = [1.0] * length
-    	topic_tuples.append(topic,weight)
+	topic_tuples = []
+	for topic in all_topics:
+		length = len(topic.split())
+		weight = [1.0] * length
+		topic_tuples.append(topic,weight)
 
-    return topic_tuples
+	return topic_tuples
 
 
 def load_docs():
@@ -326,7 +325,7 @@ class LinUCB:
 		return self.a_max
 
 
-                      
+					  
 
 def main():
 
