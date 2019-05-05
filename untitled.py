@@ -1,6 +1,7 @@
 
 import os,sys,json,math,operator
 import sqlite3
+import foo
 import tensorflow as tf
 import xmltodict
 import numpy as np
@@ -44,7 +45,7 @@ def get_doc(docs_id):
 
 def get_reward(doc_ids,query):
 
-	return best_reward
+	return best_reward,best_doc_id, rel_doc
 
 
 def load_corpus(dictionary):
@@ -60,9 +61,9 @@ def load_corpus(dictionary):
 				es.index(index='nyt_corpus',doc_type=filename,id=i,body=x)
 
 
-def get_query(query_tuple):
+def get_query(query_tuple):  #[query_str,topic_id,weight]
 	query_str = query_tuple[0]
-	weight = query_tuple[1]
+	weight = query_tuple[2]
 
 	#if weight == None:
 		#weight = [1.0] * len(query.split())
@@ -74,26 +75,27 @@ def get_query(query_tuple):
 		terms = terms + term+ ','
 	query_to_es = ""query":{"bool":{"should":[terms]}}"
 
-	return query_to_es,weight
+	return query_to_es
 
 
 def es_search(query_tuple):
-	''' param es: search engine
-			  query: one topic to search
+	''' param query_tuple: [query,topic_id,query_weight] 
 		return: five most high ranked docs retrieved by search engine
 	'''
 	es = __es__
 	doc_ids=[]
 
-	query,_ = get_query(query_tuple)
+	query = get_query(query_tuple)
 
-	res = es.search(index='nyt_corpus',body={"query":{'match':{"docdata":query}}},size=5)
+	res = es.search(index='nyt_corpus',body={query},size=5)
 	for doc in res['hits']:
 		doc_id = doc.meta.doc_type
 		doc_ids.append(doc_id)
 
 	return doc_ids
 
+
+#------------------query update strategy---------
 
 def doc_tokenize_freq(doc_id):
 	''' 
@@ -152,18 +154,16 @@ def get_query_tfidf(doc,docs,query_tuple):
 		return query_tfidf
 
 
-def get_context_features():
-	return context_features
-
+#--------------
 
 
 def take_actions(action_agent,state):
 	next_rewards = []
 	actions = ['add','remove','weight','stop']
 
-	next_rewards.append(action_agent(state).add())
-	next_rewards.append(action_agent(state).remove())
-	next_rewards.append(action_agent(state).weight())
+	next_rewards.append(action_agent(state).add()[0])
+	next_rewards.append(action_agent(state).remove()[0])
+	next_rewards.append(action_agent(state).weight()[0])
 	next_rewards.append(action_agent(state).stop())
 
 	best_action = actions[next_rewards.index(max(next_rewards))]
@@ -171,30 +171,76 @@ def take_actions(action_agent,state):
 	return best_action
 
 
-
-def learning(agent,query_list,action_agent,es):
+def learning(agent,topic_list,action_agent):
+	es = __es__
 	action = ['add','remove','weight','stop']
 
-	stop = False
-
-	for query in query_list():
-
+	topic_rewards = []
+	for n,topic in enumerate(topic_list):
+		stop = False
 		agent.init_actions(actions)
+		context = {'docs_seen':0,'last_rel':0,'rel_seen':0,
+			'add':0,'remove':0,'weight':0}
+		docs_seen_id = []
+		rel_seen_id = []
+
+		query = topic
+		topic_reward = 0
 
 		while not stop:
 			
-			docs_id = es_search(query,es)
-			reward = take_actions(action_agent,state)
+			docs_id = es_search(query)
+			for i in docs_id:
+				if i not in docs_seen_id:
+					docs_seen_id.append(i)
+					context['docs_seen']+=1
 
-			context_features = get_context_features()
-			pred = agent.recommend(timestamp,context_features,actions)
-			if pred == reward:
-				agent.update(reward)
+			current_reward,doc_id,rel_n,rel_id = get_reward(docs_id,topic[1])
+			context['last_rel'] = rel_n
+			if rel_id is not None and rel_n !=0 :
+				for i in rel_id:
+					if i not in rel_seen_id:
+						rel_seen_id.append(i)
+						context['rel_seen'] += 1
 
+		# if not the last topic, compare a[stop]-reward with starting a new topic
+		# otherwise, compare with the first topic
+			if n != len(topic_list): 
+				next_topic = topic_list[n+1]
+			else:
+				next_topic = topic_list[0]
+
+			state = {'doc':doc_id,
+				'docs':docs_id,
+				'topic':topic,
+				'next_topic':next_topic}
+
+			next_best_action,new_query = take_actions(action_agent,state)
+
+			context_features = list(context.values())
+
+			pred = agent.recommend(context_features,actions)
+			method_to_call = getattr(foo,pred)
+			reward = action_agent.method_to_call(state)
+			agent.update(reward)
+
+			for a in actions:
+				if a == pred:
+					context[a] += 1
+
+			if pred == next_best_action:
+				query = new_query
+
+			topic_reward += reward
 
 			if pred == 'stop':
 				stop = True
-				break
+				topic_rewards.append(topic_reward)
+
+	return topic_rewards
+
+
+			
 
 
 class ActionsAgent(): 
@@ -202,25 +248,36 @@ class ActionsAgent():
 	def __init__(self,state):
 		self.doc = self.state['doc']
 		self.docs = self.state['docs']
-		self.query = self.state['query'] #query tuple
-		self.next_query = self.state['next_query']
+		self.topic = self.state['topic'] #topic: [str,id,weight]
+		self.query = self.state['query'] #query: [str,weight]
+		self.next_topic = self.state['next_topic']
 
 
 	def add(self):
 		query = self.query[0]
+		weight = self.topic[1]
+		mean = sum(weight)/float(len(weight))
+
 		add_word,_ = get_doc_tfidf(self.doc,self.docs)
 		query = query + ' ' +add_word
-		new_query_tuple = (query,self.query[1])
+
+		new_weight = weight.append(mean)
+		new_query_tuple = [query,self.topic[1],new_weight]
+
 		next_ids = es_search(new_query_tuple)
-		reward = get_reward(next_ids,self.query[0])
-		return reward
+		reward,_,_,_ = get_reward(next_ids,self.topic[1])
+		return reward,new_query_tuple
 
 
 	def remove(self):
 		query = self.query[0]
+		weight = self.query[1]
+
 		query_list = query.split()
-		tfidf_list = get_query_tfidf(self.doc,self.docs,self.query)
+		tfidf_list = get_query_tfidf(self.doc,self.docs,query)
+		
 		min_index = tfidf_list.index(min(tfidf_list))
+		new_weight = weight.remove(min_index)
 		min_word = query_list[min_index]
 		query_list.remove(min_word)
 
@@ -228,12 +285,12 @@ class ActionsAgent():
 		for i in query_list:
 			removed_query = removed_query + i +' '
 
-		new_query_tuple = (removed_query[:-1],self.query[1])
+		new_query_tuple = (removed_query[:-1],self.topic[1],new_weight)
 		next_ids = es_search(new_query_tuple)
 
-		reward = get_reward(next_ids,self.query[0])
+		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
-		return reward
+		return reward,new_query_tuple
 
 
 	def weight(self):
@@ -260,15 +317,16 @@ class ActionsAgent():
 				if q == a:
 					new_weight[i] = current_weight-0.2*((20-n)/20.0)
 
-		next_ids = es_search((query,new_weight))
-		reward = get_reward(next_ids,self.query[0])
+		new_query_tuple = [query,self.topic[1],new_weight]
+		next_ids = es_search(new_query_tuple)
+		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
-		return reward
+		return reward,new_query_tuple
 
 
 	def stop(self,query_tuple,next_query_tuple):
 		next_ids = es.search(next_query_tuple)
-		reward = get_reward(next_ids,next_query_tuple[0])
+		reward,_,_,_ = get_reward(next_ids,next_query_tuple[1])
 
 		return reward
 
@@ -301,7 +359,11 @@ class LinUCB:
 
 	def update(self,reward):
 
-		r = reward
+		if reward = 0:
+			r = self.r0
+
+		else:
+			r = reward * self.r1
 
 		self.Aa[self.a_max] += np.dot(self.x,self.xT)
 		self.ba[self.a_max] += r * self.x
@@ -309,7 +371,7 @@ class LinUCB:
 		self.theta[self.a_max] = np.dot(self.AaI[self.a_max],self.ba[self.a_max])
 
 
-	def recommend(self,timestamp,context_features,actions):
+	def recommend(self,context_features,actions):
 		xaT = np.array([context_features])
 		xa = np.transport(xaT)
 
@@ -324,7 +386,6 @@ class LinUCB:
 
 		return self.a_max
 
-
 					  
 
 def main():
@@ -333,18 +394,24 @@ def main():
 		'explore_rate':0.25,
 		'learning_rate':0.01}
 
-	#topic = getTopics()
-	#print(topic)
+	topics = getTopics()
 
 	#es = Elasticsearch(['https://user:secret@localhost:443'])
 	
-	load_corpus('nyt_corpus/sample')
+	folder_path = 'nyt_corpus'
+	load_corpus(folder_path)
+
+	agent = LinUCB()
+	action_agent = ActionsAgent()
+
+	results = learning(agent,topics,action_agent)
+
 	for index in es.indices.get('*'):
 		print(index)
 
 
 if __name__ == '__main__':
 	#parser = argparse.ArgumentParser()
-	#parser.add_argument("", type=str,default=)
+	#parser.add_argument("folder_path", type=str,default=)
 
 	main()
