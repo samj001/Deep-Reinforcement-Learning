@@ -1,5 +1,4 @@
 
-
 import os,sys,json,math,operator
 import sqlite3
 import tensorflow as tf
@@ -37,6 +36,15 @@ def getTopics():
 def load_docs():
 
 	return docs
+
+
+def get_doc(docs_id):
+	#list of one or more doc id, return list [doc1_content,doc2_content,...]
+	return docs
+
+def get_reward(doc_ids,query):
+
+	return best_reward
 
 
 def load_corpus(dictionary):
@@ -147,18 +155,6 @@ def get_query_tfidf(doc,docs,query_tuple):
 def get_context_features():
 	return context_features
 
-
-def get_action_reward(action_agent):
-
-	es = __es__
-
-	query = action_agent.add(selected_doc,docs,)
-
-
-
-def get_reward(doc_ids,query):
-
-	return best_reward
 
 
 def take_actions(action_agent,state):
