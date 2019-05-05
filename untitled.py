@@ -34,11 +34,6 @@ def getTopics():
 	return topic_tuples
 
 
-def load_docs():
-
-	return docs
-
-
 def get_doc(docs_id):
 	#list of one or more doc id, return list [doc1_content,doc2_content,...]
 	return docs
