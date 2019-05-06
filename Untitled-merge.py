@@ -817,7 +817,7 @@ def main():
 
         'explore_rate':0.25,
 
-        'learning_rate':0.01}
+        'learning_rate':0.01,'iterations':50}
 
 
     topics = getTopics()
