@@ -321,7 +321,7 @@ class ActionsAgent():
 					new_weight[i] = current_weight-0.2*((20-n)/20.0)
 
 		new_query_tuple = [query,self.topic[1],new_weight]
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
 		return reward,new_query_tuple
