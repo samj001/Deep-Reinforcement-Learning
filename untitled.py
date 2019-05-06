@@ -73,7 +73,7 @@ def get_query(query_tuple):  #[query_str,topic_id,weight]
 	return query_to_es
 
 def get_content(jsonfile):
-	pattern = "^<body.content>.+"
+	pattern = "^body\.content.+"
 	x = re.findall(pattern,jsonfile)
 	x = re.sub('[\{|\}]',' ',x)
 
