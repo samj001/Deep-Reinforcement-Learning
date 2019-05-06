@@ -1,5 +1,5 @@
 
-import os,sys,json,math,operator
+import os,sys,json,math,operator,re
 import sqlite3
 import foo
 import tensorflow as tf
@@ -72,6 +72,12 @@ def get_query(query_tuple):  #[query_str,topic_id,weight]
 
 	return query_to_es
 
+def get_content(jsonfile):
+	pattern = "^<body.content>.+"
+	x = re.findall(pattern,jsonfile)
+	x = re.sub('[\{|\}]',' ',x)
+
+	return x
 
 def es_search(query_tuple):
 	''' param query_tuple: [query,topic_id,query_weight] 
@@ -79,6 +85,7 @@ def es_search(query_tuple):
 	'''
 	es = __es__
 	doc_ids=[]
+	docs_content = []
 
 	query = get_query(query_tuple)
 
@@ -86,8 +93,9 @@ def es_search(query_tuple):
 	for doc in res['hits']:
 		doc_id = doc.meta.doc_type
 		doc_ids.append(doc_id)
+		docs_contents.append(get_content(doc))
 
-	return doc_ids
+	return doc_ids,docs_content
 
 
 #------------------query update strategy---------
@@ -362,16 +370,16 @@ class LinUCB:
 
 		self.Aa[self.a_max] += np.dot(self.x,self.xT)
 		self.ba[self.a_max] += r * self.x
-		self.AaI[self.a_max] = np.linalg.inv(self.Aa[a_max])
+		self.AaI[self.a_max] = np.linalg.inv(self.Aa[self.a_max])
 		self.theta[self.a_max] = np.dot(self.AaI[self.a_max],self.ba[self.a_max])
 
 
 	def recommend(self,context_features,actions):
 		xaT = np.array([context_features])
-		xa = np.transport(xaT)
+		xa = np.transpose(xaT)
 
 		AaI_tmp = np.array([self.AaI[action]] for action in actions)
-		theta_tmp = np.array([self.thetha[action]] for action in actions)
+		theta_tmp = np.array([self.theta[action]] for action in actions)
 		action_max = actions[np.argmax(np.dot(xaT,theta_tmp)+ self.alpha * np.sqrt(np.dot(np.dot(xaT,AaI_tmp),xa)))]
 
 		self.x = xa
