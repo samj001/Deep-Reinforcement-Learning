@@ -29,7 +29,17 @@ def connect_elasticsearch():
 
 __es__ = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
-
+def plot_analyze(result_data, sheet_name):
+	book = xlwt.Workbook()
+	sheet = book.add_sheet(sheet_name)
+	column = 0
+	for data_each_iteration in result_data:
+		row = 0
+		for data in data_each_iteration:
+			sheet.write(row, column, data)
+			row = row+1
+		column = column+1
+	book.save("plot.xls")
 
 def getTopics():
 
