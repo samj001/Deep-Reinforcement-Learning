@@ -182,17 +182,28 @@ def get_query(query_tuple):  #[query_str,topic_id,weight]
 
 
 
+	#for n,word in enumerate(query_str.split()):
+
+		#term = {'match':{'body':word,'boost':weight[n]}}
+
+		#terms = terms + term+ ','
+
+	#query_to_es = "'query':{'bool':{'should':["+terms"]}}"
+
+
+
+	#return query_to_es
+
 	for n,word in enumerate(query_str.split()):
-
-		term = {'match':{'body':word,'boost':weight[n]}}
-
-		terms = terms + term+ ','
-
-	query_to_es = "'query':{'bool':{'should':["+terms"]}}"
+		term = {"term" : {"tag":word}}
+		terms.append(term)
+	query_to_es = {'query':{'bool':{'should':terms, "minimum_should_match" : 1,'boost':1.0}}}
 
 
 
 	return query_to_es
+
+
 
 
 def get_content(jsonfile):
