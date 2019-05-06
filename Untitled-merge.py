@@ -163,8 +163,6 @@ def load_corpus(dictionary):
 
 				x = xmltodict.parse(xml_content.read())
 
-				j = json.dumps(x)
-
 				__es__.index(index='nyt_corpus',doc_type=filename,id=i,body=x)
 
 
