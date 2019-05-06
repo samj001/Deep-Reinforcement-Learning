@@ -844,14 +844,11 @@ def main():
             load_corpus('.\\trec-dd-jig\\sample_run')
 
     agent = LinUCB(hparams)
+    iterations_results = []
+    for i in range(hparams['iterations']):
 
-    results = learning(agent,topics)
-
-
-
-    for index in es.indices.get('*'):
-
-        print(index)
+        results = learning(agent,topics)
+	iterations_results.append(results)
 
 
 
