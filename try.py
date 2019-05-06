@@ -101,14 +101,6 @@ def getTopics():
 
 
 
-def get_doc(docs_id):
-
-	#list of one or more doc id, return list [doc1_content,doc2_content,...]
-
-	return docs
-
-
-
 def get_reward_record(doc_ids, t_id):
 	windows_database = ".\\trec-dd-jig\\jig\\truth.db"
 	
@@ -232,6 +224,18 @@ def get_query(query_tuple):  #[query_str,topic_id,weight]
 
 	return query_to_es
 
+
+def get_content(jsonfile):
+	pattern = "^body.content.+"
+	x = re.findall(pattern,jsonfile)
+	x = re.sub('[\{|\}]',' ',x)
+	
+	return x
+
+
+def get_doc_id(jsonfile):
+	
+	pattern = "^id-string.*
 
 
 
@@ -808,7 +812,7 @@ def main():
 
         'explore_rate':0.25,
 
-        'learning_rate':0.01}
+        'learning_rate':0.01,'iterations':50}
 
 
     topics = getTopics()
@@ -830,11 +834,13 @@ def main():
 
     agent = LinUCB(hparams)
 
-    results = learning(agent,topics)
+    result_list = []
 
-
-
-    for index in es.indices.get('*'):
+    for i in hparams['iterations']:
+	results = learning(agent,topics)
+	result_list.append(results)
+	
+	for index in es.indices.get('*'):
 
         print(index)
 
