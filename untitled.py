@@ -100,14 +100,13 @@ def es_search(query_tuple):
 
 #------------------query update strategy---------
 
-def doc_tokenize_freq(doc_id):
+def doc_tokenize_freq(doc_content):
 	''' 
-	params docs: doc_id
+	params docs: doc_content, string
 	return frequency of tokens in docs (unormolized)
 	'''
 
-	doc = get_doc(doc_id)
-	tokens = word_tokenize[doc]
+	tokens = word_tokenize[doc_content]
 	freq = {}
 	for tok in tokens:
 		if tok in freq.keys():
@@ -117,18 +116,19 @@ def doc_tokenize_freq(doc_id):
 	return freq
 
 
-def get_doc_tfidf(doc_id,docs_id):
-	doc_freq = doc_tokenize_freq(doc_id)
-	#docs_freq = docs_tokenize_freq(docs)
+def get_doc_tfidf(doc_content,docs_contents):
+	''' param doc_content:string
+			  docs_contents:a list of strings
+	'''
 
-	docs = get_doc(docs_id)
+	doc_freq = doc_tokenize_freq(doc_content)
 
 	tfidf_list = []
 	max_f = 0.0
 
 	for q in doc_freq.keys():
 		doc_f = 0.00001
-		for doc in docs:
+		for doc in docs_contents:
 			if q in word_tokenize(doc):
 				doc_f += 1
 		
@@ -144,8 +144,8 @@ def get_query_tfidf(doc,docs,query_tuple):
 
 	_, doc_tfidf = get_doc_tfidf(doc,docs)
 	query = query_tuple[0]
-
 	query_tfidf = []
+
 	for q in query.split():
 		q_f = 0.0
 		for n,key in enumerate(word_tokenize(doc)):
@@ -155,7 +155,6 @@ def get_query_tfidf(doc,docs,query_tuple):
 				query_tfidf.append(q_f)
 
 		return query_tfidf
-
 
 #--------------
 
