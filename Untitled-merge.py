@@ -326,140 +326,76 @@ def take_actions(action_agent,state):
 
 
 def learning(agent,topic_list):
-
 	actions = ['add','remove','weight','stop']
 
-
-
 	topic_rewards = []
-
 	for n,topic in enumerate(topic_list):
-
 		stop = False
-
 		agent.init_actions(actions)
-
 		context = {'docs_seen':0,'last_rel':0,'rel_seen':0,
-
 			'add':0,'remove':0,'weight':0}
-
 		docs_seen_id = []
-
 		rel_seen_id = []
 
-
-
 		query = topic
-
 		topic_reward = 0
 
-
-
-		while not stop:		
-
-			docs_id,_ = es_search(query)
-
+		while not stop:
+			
+			docs_id,docs_contents = es_search(query)
 			for i in docs_id:
-
 				if i not in docs_seen_id:
-
 					docs_seen_id.append(i)
-
 					context['docs_seen']+=1
 
-
-
 			current_reward,doc_id,rel_n,rel_id = get_reward(docs_id,topic[1])
-
+			doc_content = docs_contents[docs_id.index(doc_id)]
+			
 			context['last_rel'] = rel_n
-
 			if rel_id is not None and rel_n !=0 :
-
 				for i in rel_id:
-
 					if i not in rel_seen_id:
-
 						rel_seen_id.append(i)
-
 						context['rel_seen'] += 1
 
-
-
 		# if not the last topic, compare a[stop]-reward with starting a new topic
-
 		# otherwise, compare with the first topic
-
 			if n != len(topic_list): 
-
 				next_topic = topic_list[n+1]
-
 			else:
-
 				next_topic = topic_list[0]
 
-
-
-			state = {'doc':doc_id,
-
-				'docs':docs_id,
-
+			state = {'doc':doc_content,
+				'docs':docs_contents,
 				'topic':topic,
-
+				'query':[query[0],query[2]],
 				'next_topic':next_topic}
 
 			action_agent = ActionsAgent(state)
 
 			next_best_action,new_query = take_actions(action_agent,state)
 
-
-
 			context_features = list(context.values())
 
-
-
 			pred = agent.recommend(context_features,actions)
-
 			method_to_call = getattr(action_agent,pred)
-
-			reward = method_to_call(state)
-
+			reward = action_agent.method_to_call(state)
 			agent.update(reward)
 
-
-
 			for a in actions:
-
 				if a == pred:
-
 					context[a] += 1
 
-
-
 			if pred == next_best_action:
-
 				query = new_query
-
-
 
 			topic_reward += reward
 
-
-
 			if pred == 'stop':
-
 				stop = True
-
 				topic_rewards.append(topic_reward)
 
-
-
 	return topic_rewards
-
-
-
-
-
-			
 
 
 
