@@ -192,7 +192,7 @@ def learning(agent,topic_list,action_agent):
 
 		while not stop:
 			
-			docs_id = es_search(query)
+			docs_id,_ = es_search(query)
 			for i in docs_id:
 				if i not in docs_seen_id:
 					docs_seen_id.append(i)
@@ -267,7 +267,7 @@ class ActionsAgent():
 		new_weight = weight.append(mean)
 		new_query_tuple = [query,self.topic[1],new_weight]
 
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 		return reward,new_query_tuple
 
@@ -289,7 +289,7 @@ class ActionsAgent():
 			removed_query = removed_query + i +' '
 
 		new_query_tuple = (removed_query[:-1],self.topic[1],new_weight)
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
