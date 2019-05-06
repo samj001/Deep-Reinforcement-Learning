@@ -98,9 +98,6 @@ def getTopics():
 	return topic_list
 
 
-
-
-
 def get_reward_record(doc_ids, t_id):
 	windows_database = ".\\trec-dd-jig\\jig\\truth.db"
 	
@@ -159,7 +156,6 @@ def get_reward(doc_ids, t_id):
 
 
 
-
 def load_corpus(dictionary):
 
 	''' param dictionary: folder path where corpus xml files are 
@@ -184,23 +180,13 @@ def load_corpus(dictionary):
 
 
 
-
 def get_query(query_tuple):  #[query_str,topic_id,weight]
 
 	query_str = query_tuple[0]
 
 	weight = query_tuple[2]
 
-
-
-	#if weight == None:
-
-		#weight = [1.0] * len(query.split())
-
-
-
 	terms = []
-
 
 
 	for n,word in enumerate(query_str.split()):
@@ -221,7 +207,6 @@ def get_query(query_tuple):  #[query_str,topic_id,weight]
 	query_to_es = {'query':{'bool':{'should':terms, "minimum_should_match" : 1,'boost':1.0}}}
 
 
-
 	return query_to_es
 
 
@@ -231,13 +216,6 @@ def get_content(jsonfile):
 	x = re.sub('[\{|\}]',' ',x)
 	
 	return x
-
-
-def get_doc_id(jsonfile):
-	
-	pattern = "^id-string.*
-
-
 
 
 def es_search(query_tuple):
@@ -387,13 +365,7 @@ def get_query_tfidf(doc,docs,query_tuple):
 		return query_tfidf
 
 
-
-
-
 #--------------
-
-
-
 
 
 def take_actions(action_agent,state):
@@ -414,8 +386,6 @@ def take_actions(action_agent,state):
 
 
 	return best_action
-
-
 
 
 
@@ -448,9 +418,7 @@ def learning(agent,topic_list):
 		topic_reward = 0
 
 
-
 		while not stop:
-
 			
 
 			docs_id = es_search(query)
@@ -478,7 +446,6 @@ def learning(agent,topic_list):
 						rel_seen_id.append(i)
 
 						context['rel_seen'] += 1
-
 
 
 		# if not the last topic, compare a[stop]-reward with starting a new topic
@@ -509,11 +476,7 @@ def learning(agent,topic_list):
 
 			next_best_action,new_query = take_actions(action_agent,state)
 
-
-
 			context_features = list(context.values())
-
-
 
 			pred = agent.recommend(context_features,actions)
 
@@ -524,7 +487,6 @@ def learning(agent,topic_list):
 			agent.update(reward)
 
 
-
 			for a in actions:
 
 				if a == pred:
@@ -532,15 +494,12 @@ def learning(agent,topic_list):
 					context[a] += 1
 
 
-
 			if pred == next_best_action:
 
 				query = new_query
 
 
-
 			topic_reward += reward
-
 
 
 			if pred == 'stop':
@@ -550,12 +509,11 @@ def learning(agent,topic_list):
 				topic_rewards.append(topic_reward)
 
 
-
 	return topic_rewards
 
+
+
 class ActionsAgent(): 
-
-
 
 	def __init__(self,state):
         
@@ -571,8 +529,6 @@ class ActionsAgent():
 
 
 
-
-
 	def add(self):
 
 		query = self.query[0]
@@ -582,17 +538,14 @@ class ActionsAgent():
 		mean = sum(weight)/float(len(weight))
 
 
-
 		add_word,_ = get_doc_tfidf(self.doc,self.docs)
 
 		query = query + ' ' +add_word
 
 
-
 		new_weight = weight.append(mean)
 
 		new_query_tuple = [query,self.topic[1],new_weight]
-
 
 
 		next_ids = es_search(new_query_tuple)
@@ -601,9 +554,7 @@ class ActionsAgent():
 
 		return reward,new_query_tuple
 
-
-
-
+	
 
 	def remove(self):
 
@@ -612,13 +563,11 @@ class ActionsAgent():
 		weight = self.query[1]
 
 
-
 		query_list = query.split()
 
 		tfidf_list = get_query_tfidf(self.doc,self.docs,query)
 
 		
-
 		min_index = tfidf_list.index(min(tfidf_list))
 
 		new_weight = weight.remove(min_index)
@@ -628,7 +577,6 @@ class ActionsAgent():
 		query_list.remove(min_word)
 
 
-
 		removed_query = ''
 
 		for i in query_list:
@@ -636,19 +584,15 @@ class ActionsAgent():
 			removed_query = removed_query + i +' '
 
 
-
 		new_query_tuple = (removed_query[:-1],self.topic[1],new_weight)
 
 		next_ids = es_search(new_query_tuple)
 
 
-
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
 
-
 		return reward,new_query_tuple
-
 
 
 
@@ -681,14 +625,12 @@ class ActionsAgent():
 
 					new_weight[i] = current_weight+0.2*((20-n)/20.0)
 
-	
 
 			for n,(a,b) in enumerate(least_rel):
 
 				if q == a:
 
 					new_weight[i] = current_weight-0.2*((20-n)/20.0)
-
 
 
 		new_query_tuple = [query,self.topic[1],new_weight]
@@ -698,9 +640,9 @@ class ActionsAgent():
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
 
-
 		return reward,new_query_tuple
         
+	
 	def stop(self,query_tuple,next_query_tuple):
 		next_ids = __es__.search(next_query_tuple)
 		reward,_,_,_ = get_reward(next_ids,next_query_tuple[1])
@@ -709,12 +651,9 @@ class ActionsAgent():
 
 
 
-
 class LinUCB:
 
 	def __init__ (self,hparams):
-
-
 
 		self.alpha = hparams['explore_rate']
 
@@ -740,8 +679,6 @@ class LinUCB:
 
 
 
-
-
 	def init_actions(self,actions):
 
 		for action in actions:
@@ -753,8 +690,6 @@ class LinUCB:
 			self.AaI[action] = np.identity(self.d)
 
 			self.theta[action] = np.zeros((self.d,1))
-
-
 
 
 
@@ -774,8 +709,6 @@ class LinUCB:
 		self.AaI[self.a_max] = np.linalg.inv(self.Aa[self.a_max])
 
 		self.theta[self.a_max] = np.dot(self.AaI[self.a_max],self.ba[self.a_max])
-
-
 
 
 
@@ -801,10 +734,6 @@ class LinUCB:
 
 
 
-					  
-
-
-
 def main():
 
 
@@ -821,7 +750,7 @@ def main():
     es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 	
 
-    # folder_path = 'nyt_corpus'
+    #folder_path = 'nyt_corpus'
 
     # if platform.system() == 'Darwin':
 
