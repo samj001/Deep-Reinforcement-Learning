@@ -83,16 +83,6 @@ def getTopics():
 
 
 
-
-
-def get_doc(docs_id):
-
-	#list of one or more doc id, return list [doc1_content,doc2_content,...]
-
-	return docs
-
-
-
 def get_reward_record(doc_ids, t_id):
 	windows_database = ".\\trec-dd-jig\\jig\\truth.db"
 	
@@ -146,12 +136,9 @@ def get_reward(doc_ids, t_id):
 
 
 
-
 def load_corpus(dictionary):
 
 	''' param dictionary: folder path where corpus xml files are 
-
-		return: 
 
 	'''
 
@@ -200,8 +187,12 @@ def get_query(query_tuple):  #[query_str,topic_id,weight]
 	return query_to_es
 
 
+def get_content(jsonfile):
+	pattern = "^<body.content>.+"
+	x = re.findall(pattern,jsonfile)
+	x = re.sub('[\{|\}]',' ',x)
 
-
+	return x
 
 def es_search(query_tuple):
 
@@ -212,11 +203,10 @@ def es_search(query_tuple):
 	'''
 
 	doc_ids=[]
-
+	docs_content = []
 
 
 	query = get_query(query_tuple)
-
 
 
 	res = __es__.search(index='nyt_corpus',body={query},size=5)
@@ -226,10 +216,12 @@ def es_search(query_tuple):
 		doc_id = doc.meta.doc_type
 
 		doc_ids.append(doc_id)
+		
+		docs_content.append(get_content(doc))
 
 
 
-	return doc_ids
+	return doc_ids,docs_content
 
 
 
@@ -363,11 +355,9 @@ def learning(agent,topic_list):
 
 
 
-		while not stop:
+		while not stop:		
 
-			
-
-			docs_id = es_search(query)
+			docs_id,_ = es_search(query)
 
 			for i in docs_id:
 
@@ -517,7 +507,7 @@ class ActionsAgent():
 
 
 
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
@@ -561,7 +551,7 @@ class ActionsAgent():
 
 		new_query_tuple = (removed_query[:-1],self.topic[1],new_weight)
 
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 
 
 
@@ -625,7 +615,7 @@ class ActionsAgent():
 
 		new_query_tuple = [query,self.topic[1],new_weight]
 
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
