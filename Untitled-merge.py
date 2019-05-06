@@ -2,8 +2,6 @@ import os,sys,json,math,operator,re
 
 import sqlite3
 
-import tensorflow as tf
-
 import xmltodict
 
 import numpy as np
