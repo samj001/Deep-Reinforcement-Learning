@@ -240,7 +240,7 @@ def es_search(query_tuple):
 
 		doc_ids.append(doc_id)
 		print(doc_ids)
-	return doc_ids,
+	return doc_ids,doc_contents
 
 
 
@@ -397,7 +397,7 @@ def learning(agent,topic_list):
 
 		while not stop:
 
-			docs_id = es_search(query)
+			docs_id,docs_contents = es_search(query)
 
 			for i in docs_id:
 
@@ -409,6 +409,7 @@ def learning(agent,topic_list):
 
 
 			current_reward,doc_id,rel_n,rel_id = get_reward(docs_id,"'{tp}'".format(tp = topic[1]))
+			doc_content = docs_contents[docs_id.index(doc_id)]
 
 			context['last_rel'] = rel_n
 
@@ -438,9 +439,9 @@ def learning(agent,topic_list):
 
 
 
-			state = {'doc':doc_id,
+			state = {'doc':doc_content,
 
-				'docs':docs_id,
+				'docs':docs_contents,
 
 				'topic':topic,
 
@@ -525,7 +526,7 @@ class ActionsAgent:
 
 		new_query_tuple = [query,self.topic[1],new_weight]
 
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
@@ -563,7 +564,7 @@ class ActionsAgent:
 
 		new_query_tuple = (removed_query[:-1],self.topic[1],new_weight)
 
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 
 
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
@@ -612,7 +613,7 @@ class ActionsAgent:
 
 		new_query_tuple = [query,self.topic[1],new_weight]
 
-		next_ids = es_search(new_query_tuple)
+		next_ids,_ = es_search(new_query_tuple)
 
 		reward,_,_,_ = get_reward(next_ids,self.topic[1])
 
