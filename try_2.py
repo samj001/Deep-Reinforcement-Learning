@@ -96,16 +96,6 @@ def getTopics():
 
 
 
-
-
-def get_doc(docs_id):
-
-	#list of one or more doc id, return list [doc1_content,doc2_content,...]
-
-	return docs
-
-
-
 def get_reward_record(doc_ids, t_id):
 	windows_database = ".\\trec-dd-jig\\jig\\truth.db"
 	
@@ -187,7 +177,6 @@ def load_corpus(dictionary):
 
 
 
-
 def get_query(query_tuple):  #[query_str,topic_id,weight]
 
 	query_str = query_tuple[0]
@@ -238,8 +227,6 @@ def es_search(query_tuple):
 
 	doc_ids=[]
 
-
-
 	query = get_query(query_tuple)
 
 	res = __es__.search(index='nyt_corpus',body=query, size=5)
@@ -253,7 +240,7 @@ def es_search(query_tuple):
 
 		doc_ids.append(doc_id)
 		print(doc_ids)
-	return doc_ids
+	return doc_ids,
 
 
 
