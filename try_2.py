@@ -454,7 +454,7 @@ def learning(agent,topic_list):
 
 
 
-			current_reward,doc_id,rel_n,rel_id = get_reward(docs_id,topic[1])
+			current_reward,doc_id,rel_n,rel_id = get_reward(docs_id,"'{tp}'".format(tp = topic[1]))
 
 			context['last_rel'] = rel_n
 
