@@ -70,7 +70,7 @@ The context feature is supposed to update dur- ing the path searching of each to
 The experiment is implemented on a topic list with sixty query-like topics based on the New York Times corpus. A ground-truth database reveals information including subtopics of each topic, doc- uments and passages related to each subtopic and their related rates, which serves exactly as the ”user agent” in our system and indicates how good are search results every time Elasticsearch picks up some documents.
   
 ![image](https://github.com/samj001/COSC689-finalproject/blob/master/image/figure1.png)
---Figure 1--
+-Figure 1-
   
 We start learning the model with a learning rate of 0.01, explore rate of 0.25 and a six-dimension of context feature. The model keeps predicting and updating weights until the ”stop” scores the highest among the four. Figure 1 shows an ex- ample of model’s procedures when executing the algorithm.
   
