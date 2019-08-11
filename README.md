@@ -70,7 +70,8 @@ The context feature is supposed to update dur- ing the path searching of each to
 The experiment is implemented on a topic list with sixty query-like topics based on the New York Times corpus. A ground-truth database reveals information including subtopics of each topic, doc- uments and passages related to each subtopic and their related rates, which serves exactly as the ”user agent” in our system and indicates how good are search results every time Elasticsearch picks up some documents.
   
 ![image](https://github.com/samj001/COSC689-finalproject/blob/master/image/figure1.png)
-    
+--Figure 1--
+  
 We start learning the model with a learning rate of 0.01, explore rate of 0.25 and a six-dimension of context feature. The model keeps predicting and updating weights until the ”stop” scores the highest among the four. Figure 1 shows an ex- ample of model’s procedures when executing the algorithm.
   
 The first line shows a list of initial search results of the first topic and their feedback from the user agent. Here the score of each document is summed up by all subtopics related passages’ rates. Four possible actions and their corresponding reformu- lated queries and scores follow. We can see that the ”add” action reformulates the query by adding the word ”Ms.”, which is selected from document three according to the tf-idf value. Also, the ”re- move” action removes the word ”paintings” from the query, the ”weigh” action lowers the weight of ”Klimt”, ”paintings”, ”Maria” and ”Altmann”, and the ”stop” action gets much lower score so the search of this topic keeps going on.
