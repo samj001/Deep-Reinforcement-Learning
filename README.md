@@ -1,14 +1,16 @@
 # COSC689-finalproject
 # Dynamic search system via deep reinforcement learning on NYT corpus
 
-【Abstract】   
+Abstract  
+-------
 
-  In this paper we present a contextual bandit ap- proach to dynamic search tasks. It is imple- mented on the New York Times Corpus and evaluated with CUBE tests and precision met- rics. Our approach relies on a search engine and a user agent, creating an interacting pro- cess of the information retrieval task. The re- inforcement learning method, which is based on each time of interactions, allows the system to optimize the searching path to find the most relevant information from the corpus.  
+>>In this paper we present a contextual bandit ap- proach to dynamic search tasks. It is imple- mented on the New York Times Corpus and evaluated with CUBE tests and precision met- rics. Our approach relies on a search engine and a user agent, creating an interacting pro- cess of the information retrieval task. The re- inforcement learning method, which is based on each time of interactions, allows the system to optimize the searching path to find the most relevant information from the corpus.  
 	
 
-【1 Introduction】   
+1 Introduction 
+-------
 
-  Dynamic search is a kind of problem where the goal is to find the overall optimal return through a certain path among the searching pool. In the pro- cess, the search agent is faced with many branches to take a try and see how it goes at each time step, and it depends on limited knowledge to make de- cisions.
+>>Dynamic search is a kind of problem where the goal is to find the overall optimal return through a certain path among the searching pool. In the pro- cess, the search agent is faced with many branches to take a try and see how it goes at each time step, and it depends on limited knowledge to make de- cisions.
   
   The primary challenging of dynamic search problems is to balance the exploration and ex- ploitation rate of the search agent, that is, whether the agent relies on current knowledge to explore already known good paths, or it spends in trying something new which may potentially be better than all known options.
 Compared with basic multi-armed Bandit algo- rithm, the Contextual Bandit algorithm includes context features each time it makes predictions of which way to go. As a result, such an algorithm could make more reasonable decisions on explo- ration or exploitation contradiction.
